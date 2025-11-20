@@ -1,7 +1,7 @@
 # 🚀 Hybrid GenAI Transaction Categorization
 
 [![Build Status](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions/workflows/ci.yml/badge.svg)](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions)
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)
 ![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB)
 ![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)
 ![AI Pipeline](https://img.shields.io/badge/AI-Hybrid%20ONNX%20%2B%20LLM-purple)
@@ -243,7 +243,17 @@ PRs welcome — open an issue or drop a suggestion.
 
 ## 📜 License
 
-MIT License — free to use and modify.
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License**.
+
+**You may:**
+- ✅ Use for personal and educational purposes
+- ✅ Modify and adapt the code
+- ✅ Share and redistribute
+
+**You may NOT:**
+- ❌ Use for commercial purposes
+
+See the [LICENSE](LICENSE) file for full details.
 
 ---
 
