@@ -1,21 +1,230 @@
-# Hybrid GenAI Transaction Categorization
+# 🚀 Hybrid GenAI Transaction Categorization
 
-A hybrid approach to transaction categorization using ONNX models and Large Language Models (LLMs).
+[![Build Status](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions/workflows/ci.yml/badge.svg)](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB)
+![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)
+![AI Pipeline](https://img.shields.io/badge/AI-Hybrid%20ONNX%20%2B%20LLM-purple)
 
-## Project Structure
+A modern AI-powered transaction categorization system blending **ONNX**, **LLM fallback**, and a **self-learning Merchant Memory module**.
 
-- **backend/**: Core backend services for classification and processing
-- **frontend/**: User-facing application
-- **models/**: ONNX models and LLM configurations
-- **retrain/**: Model retraining pipelines
-- **data/**: Sample data and configuration files
-- **docs/**: Documentation and architecture diagrams
-- **tests/**: Test suites
+Built by **Atishay Jain**.
 
-## Getting Started
+---
 
-See `requirements.txt` for dependencies.
+## 🔥 Overview
 
-## License
+This project reads natural-language transaction text like:
 
-MIT
+```
+dominos order 750 
+bharat petrol payment 500 
+smart class monthly 899 
+volvo bus booking 1200
+```
+
+And automatically predicts:
+
+- **Category** (Food, Groceries, Travel, Fuel, Bills, etc.)
+- **Merchant** (Dominos, Bharat Petrol, Volvo, etc.)
+- **Confidence score**
+- **Explanation**
+- **Token attribution**
+
+The frontend displays predictions beautifully, and the Merchant Memory module learns your spending patterns over time.
+
+---
+
+## ✨ Key Features
+
+### 🧠 **Hybrid AI Model**
+- Primary: **ONNX DistilBERT**  
+- Fallback: **Large Language Model**  
+- Auto-selects model based on confidence  
+- Fast, accurate, reliable  
+
+### 🛒 **Smart Merchant Memory System**
+- Auto-detect merchants using:
+  - **merchant_map.json** (known vendors)
+  - AI fallback for unknown merchants  
+- Handles inputs like:
+  - "dominos 750"
+  - "domino's pizza payment 450"
+  - "swiggy order 569"
+- Groups transactions by merchant  
+- Tracks:
+  - total spent  
+  - visit count  
+  - average spend  
+  - individual transaction history  
+- Expandable merchant cards with analytics  
+
+### 💅 **Beautiful Frontend**
+- React + Vite + TailwindCSS  
+- Dark mode with glass UI  
+- Smooth transitions  
+- Category color-coding  
+- Token attribution display  
+
+### ⚡ **FastAPI Backend**
+- `/predict` endpoint  
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app:app --reload --port 8000
+```
+
+Runs on:  
+👉 http://localhost:8000
+
+### **Frontend (React + Vite)**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Runs on:  
+👉 http://localhost:5173
+
+### **🐳 Run Entire Project With Docker**
+
+Just one command:
+
+```bash
+docker-compose up --build
+```
+
+- Frontend → http://localhost:5173
+- Backend → http://localhost:8000
+
+---
+
+## ⚙️ Environment Variables
+
+**backend/.env.example**
+
+```env
+PREDICT_PORT=8000
+MODEL_PATH=./models/model.onnx
+LOG_LEVEL=info
+```
+
+**frontend/.env.example**
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+---
+
+## 🔍 How Prediction Works
+
+1. **User enters text:**
+   ```
+   "dominos order 750"
+   ```
+
+2. **Backend extracts:**
+   - merchant: `"dominos"`
+   - amount: `750`
+
+3. **ONNX model predicts category**
+
+4. **LLM fallback used if low confidence**
+
+5. **Merchant Memory updates:**
+   - `visits++`
+   - `total spend++`
+
+6. **Frontend displays:**
+   - category
+   - confidence bar
+   - merchant card
+   - explanation
+   - token attribution
+
+---
+
+## 🛒 Merchant Extraction Logic
+
+The smart extractor handles:
+
+- removing filler words
+- ignoring the word before the number
+- normalizing punctuation
+- using custom merchant_map
+- fallback merchant derivation
+
+**Examples:**
+
+| Input | Extracted Merchant |
+|-------|-------------------|
+| `dominos order 750` | dominos |
+| `smart class monthly 899` | smart class |
+| `bharat petrol payment 500` | bharat petrol |
+| `volvo bus booking 1200` | volvo bus |
+
+---
+
+## 🎨 UI Showcase
+
+> Place in: `/frontend/public/screenshots/`
+
+Then embed here:
+
+```markdown
+![Prediction UI](public/screenshots/predict.png)
+![Merchant Memory](public/screenshots/memory.png)
+```
+
+---
+
+## 🤖 CI/CD (GitHub Actions)
+
+A workflow is included in:
+
+```
+.github/workflows/ci.yml
+```
+
+It checks:
+
+- frontend builds correctly
+- backend installs correctly
+- tests run (if added)
+
+---
+
+## 🔥 Future Improvements
+
+- Spend analytics graph
+- Weekly/monthly reports
+- Export data as CSV
+- OCR for reading receipts
+- Fine-tuned merchant embeddings
+
+---
+
+## 🤝 Contributing
+
+PRs welcome — open an issue or drop a suggestion.
+
+---
+
+## 📜 License
+
+MIT License — free to use and modify.
+
+---
+
+## 👤 Author
+
+**Atishay Jain**
+
+---

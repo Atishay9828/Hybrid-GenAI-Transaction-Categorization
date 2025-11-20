@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+onnxruntime
+transformers
+torch
+streamlit
+pandas
+numpy
+requests
