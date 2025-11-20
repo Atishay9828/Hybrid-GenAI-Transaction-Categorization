@@ -1,0 +1,58 @@
+{
+  "zomato": "food",
+  "swiggy": "food",
+  "dominos": "food",
+  "kfc": "food",
+  "mcdonalds": "food",
+  "pizzahut": "food",
+
+  "amazon": "shopping",
+  "flipkart": "shopping",
+  "myntra": "shopping",
+  "tatacliq": "shopping",
+
+  "uber": "travel",
+  "ola": "travel",
+  "air india": "travel",
+  "indigo": "travel",
+  "vistara": "travel",
+  "spicejet": "travel",
+  "volvo": "travel",
+  "redbus": "travel",
+
+  "dmart": "groceries",
+  "bigbasket": "groceries",
+  "jiomart": "groceries",
+  "reliance fresh": "groceries",
+
+  "indianoil": "fuel",
+  "hp": "fuel",
+  "bp": "fuel",
+  "reliance petrol": "fuel",
+
+  "airtel": "bills",
+  "jio recharge": "bills",
+  "jio prepaid": "bills",
+  "jio postpaid": "bills",
+  "bsnl": "bills",
+  "vodafone": "bills",
+  "gas bill": "bills",
+  "water bill": "bills",
+  "electricity": "bills",
+
+  "apollo": "health",
+  "medplus": "health",
+  "hospital": "health",
+  "clinic": "health",
+
+  "pvr": "entertainment",
+  "inox": "entertainment",
+  "bookmyshow": "entertainment",
+  "netflix": "entertainment",
+  "spotify": "entertainment",
+
+  "coursera": "education",
+  "udemy": "education",
+  "byjus": "education",
+  "vedantu": "education"
+}

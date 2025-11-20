@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ⛔ DO NOT use plain CSS colors for backgrounds */
+/* ⛔ Remove any existing: body { background: white; } */
+
+/* Default light mode */
+body {
+  @apply bg-white text-black;
+}
+
+/* Activated when <html class="dark"> */
+.dark body {
+  @apply bg-[#0b0d0f] text-white;
+}

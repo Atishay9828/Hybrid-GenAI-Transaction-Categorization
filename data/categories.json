@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "confidence_threshold": 0.95,
+  "categories": [
+    { "id": "food", "name": "Food & Dining", "synonyms": ["restaurant","zomato","swiggy","dine"] },
+    { "id": "groceries", "name": "Groceries", "synonyms": ["supermarket","grocery","bigbasket"] },
+    { "id": "travel", "name": "Travel", "synonyms": ["uber","ola","flight","booking"] },
+    { "id": "fuel", "name": "Fuel", "synonyms": ["petrol","bp","hp"] },
+    { "id": "bills", "name": "Bills & Utilities", "synonyms": ["electricity","phone bill","recharge"] },
+    { "id": "shopping", "name": "Shopping", "synonyms": ["amazon","flipkart","myntra"] },
+    { "id": "health", "name": "Health", "synonyms": ["hospital","clinic","pharma"] },
+    { "id": "entertainment", "name": "Entertainment", "synonyms": ["netflix","movie","concert"] },
+    { "id": "education", "name": "Education", "synonyms": ["course","udemy","coursera"] },
+    { "id": "others", "name": "Others", "synonyms": [] }
+  ]
+}
