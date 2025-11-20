@@ -43,6 +43,30 @@ The frontend displays predictions beautifully, and the Merchant Memory module le
 - Auto-selects model based on confidence  
 - Fast, accurate, reliable  
 
+**Model Training:**
+- Trained on **Google Colab** → [View Training Notebook](https://colab.research.google.com/drive/1Foi8sGqDq3nYCUje-8Fi0Sk_BbK67MlD)
+- Dataset: **1,500 rows of synthetic transaction data**
+- Categories: **10 transaction categories** (Food, Groceries, Travel, Fuel, Bills, Shopping, Health, Entertainment, Education, Others)
+- **Fully offline-capable** using LLM fallback when ONNX model is unavailable
+- Category definitions in [`categoryColors.js`](frontend/src/utils/categoryColors.js)
+
+### 🛒 **Smart Merchant Memory System**
+- Auto-detect merchants using:
+  - **merchant_map.json** (known vendors)
+  - AI fallback for unknown merchants  
+- Handles inputs like:
+The frontend displays predictions beautifully, and the Merchant Memory module learns your spending patterns over time.
+
+---
+
+## ✨ Key Features
+
+### 🧠 **Hybrid AI Model**
+- Primary: **ONNX DistilBERT**  
+- Fallback: **Large Language Model**  
+- Auto-selects model based on confidence  
+- Fast, accurate, reliable  
+
 ### 🛒 **Smart Merchant Memory System**
 - Auto-detect merchants using:
   - **merchant_map.json** (known vendors)
