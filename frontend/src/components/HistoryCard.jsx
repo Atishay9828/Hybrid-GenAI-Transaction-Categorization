@@ -6,7 +6,7 @@ import categoryColors from "../utils/categoryColors";
 import engineLabels from "../utils/engineLabels";
 import { Trash2 } from "lucide-react";
 
-export default function HistoryCard({ item, onDelete }) {
+export default function HistoryCard({ item, onDelete, onClick }) {  
   const {
     text = "",
     category = "others",
@@ -23,35 +23,38 @@ export default function HistoryCard({ item, onDelete }) {
   const confPct = Math.max(0, Math.min(1, Number(confidence)));
 
   return (
-    <div className="w-full bg-gradient-to-b from-white/3 to-black/5 rounded-2xl p-5 mb-6 shadow-lg">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${colors.bg} ${colors.ring} ring-1`}>
-            <span className={`text-xs font-semibold ${colors.text}`}>{cat.toUpperCase()}</span>
-          </div>
+<div className="w-full bg-gradient-to-b from-white/3 to-black/5 rounded-2xl p-5 mb-6 shadow-lg hover:bg-white/10 transition cursor-pointer" onClick={onClick}>      
+  <div className="flex items-center justify-between gap-4">
+    <div className="flex items-center gap-4">
+      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${colors.bg} ${colors.ring} ring-1`}>
+        <span className={`text-xs font-semibold ${colors.text}`}>{cat.toUpperCase()}</span>
+      </div>
 
-          <div>
-            <div className="text-sm font-medium">{formatConfidence(confPct)}</div>
-            <div className="text-[13px] text-gray-300/80 mt-1 max-w-lg whitespace-nowrap overflow-hidden text-ellipsis">
-              {text}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className={`text-[11px] px-2 py-1 rounded-full ${engineMeta.tone} border border-white/6`}>
-            {engineMeta.label}
-          </div>
-
-          <button
-            onClick={() => onDelete && onDelete(timestamp)}
-            className="p-2 rounded-full hover:bg-white/5 transition"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 text-gray-300" />
-          </button>
+      <div>
+        <div className="text-sm font-medium">{formatConfidence(confPct)}</div>
+        <div className="text-[13px] text-gray-300/80 mt-1 max-w-lg whitespace-nowrap overflow-hidden text-ellipsis">
+          {text}
         </div>
       </div>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <div className={`text-[11px] px-2 py-1 rounded-full ${engineMeta.tone} border border-white/6`}>
+        {engineMeta.label}
+      </div>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation(); // ❗ prevents opening the panel
+          onDelete && onDelete(timestamp);
+        }}
+        className="p-2 rounded-full hover:bg-white/5 transition"
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4 text-gray-300" />
+      </button>
+    </div>
+  </div>
 
       {/* confidence bar */}
       <div className="mt-4">

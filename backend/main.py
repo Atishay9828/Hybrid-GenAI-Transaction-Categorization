@@ -8,7 +8,7 @@ from typing import Optional
 from backend.classify import classify_transaction
 from backend.feedback import load_merchants, add_merchant
 from fastapi.middleware.cors import CORSMiddleware
-
+from backend.insight_route import router as insight_router
 
 app = FastAPI(title="Hybrid GenAI Transaction Categorizer")
 app.add_middleware(
@@ -74,3 +74,5 @@ def feedback(data: FeedbackInput):
         learned.append(token)
 
     return {"status": "updated", "learned_merchants": learned, "category": category}
+
+app.include_router(insight_router)

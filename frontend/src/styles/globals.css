@@ -2,11 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* optional fintech luxury colors */
+/* Global dark aesthetic */
 :root {
-  --muted: rgba(30, 30, 30, 0.7);
+  --muted: rgba(25, 25, 25, 0.6);
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
 }
 
-.dark {
-  color-scheme: dark;
+body {
+  @apply bg-neutral-950 text-neutral-200 antialiased;
+}
+
+/* Smooth transitions app-wide */
+* {
+  transition: background 0.25s ease, color 0.2s ease, border 0.25s ease;
+}
+
+/* Premium glass card */
+.glass-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(24px);
+  border-radius: 1rem;
+}
+
+/* Scroll behaviour */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
