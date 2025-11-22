@@ -29,12 +29,12 @@ export const useMerchantMemoryStore = create((set) => ({
           merchants: state.merchants.map((m) =>
             m.internalName === internalName
               ? {
-                  ...m,
-                  visits: m.visits + 1,
-                  total: m.total + merchant.total,
-                  // Keep the PRETTIEST version of name
-                  displayName: merchant.name || m.displayName,
-                }
+                ...m,
+                visits: m.visits + 1,
+                total: m.total + merchant.total,
+                // Keep the PRETTIEST version of name
+                displayName: merchant.name || m.displayName,
+              }
               : m
           ),
         };
