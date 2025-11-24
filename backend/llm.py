@@ -1,32 +1,36 @@
 from llama_cpp import Llama
-
-# Path to your GGUF shard
-LLM_PATH = "models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf"
+import threading
 
 # Load model once
 llm = Llama(
-    model_path=LLM_PATH,
+    model_path="models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf",
     n_ctx=2048,
-    n_threads=8,
+    n_threads=10,
     n_gpu_layers=0,
-    verbose=False
+    verbose=True
 )
+
+# Global lock for LLM access
+LOCK = threading.Lock()
 
 def run_local_llm(prompt: str) -> str:
     try:
-        response = llm(
-            prompt=prompt,
-            max_tokens=200,
-            temperature=0.4,
-            top_p=0.9,
-            stop=["User:", "Human:", "</s>"]
-        )
-        print("RAW LLM OUTPUT:", response)
-        # 👉 EXTRACT CLEAN TEXT (THIS is what you were missing)
+        # ⭐ USE create_completion — safe for your version
+        # Protect with lock to avoid access violation
+        with LOCK:
+            response = llm(
+                prompt=prompt,
+                max_tokens=150,
+                stop=[
+                    "Human:", "User:", "Assistant:", "assistant:",
+                    "\nHuman:", "\nUser:", "</s>"
+                ] 
+           )
+
         text = response["choices"][0]["text"].strip()
 
-        # Cleanup repeated roles if model echoes them
-        for bad in ["Assistant:", "User:", "Human:"]:
+        # HARD TRIM — remove anything after Human:/Assistant:
+        for bad in ["Human:", "User:", "Assistant:", "assistant:"]:
             if bad in text:
                 text = text.split(bad)[0].strip()
 

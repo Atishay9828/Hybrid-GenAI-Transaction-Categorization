@@ -1,11 +1,14 @@
+# backend/insight_route.py
 import html
 import time
 import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-INSIGHT_CACHE = {}
+import hashlib
+
 router = APIRouter()
+INSIGHT_CACHE = {}
 
 # -------------------------------
 # Input Models
@@ -22,10 +25,10 @@ class InsightRequest(BaseModel):
     transaction: InsightTxn
     recent_history: List[InsightTxn] = []
 
-
 # -------------------------------
-# ⚠️ LOCAL LLM FUNCTION (update this)
+# LOCAL LLM FUNCTION (must exist)
 # -------------------------------
+# IMPORTANT: this must point to whatever module exposes run_local_llm
 from backend.llm import run_local_llm
 
 # -------------------------------
@@ -35,95 +38,96 @@ def build_prompt(tx: InsightTxn, history: List[InsightTxn]) -> str:
     t_text = html.escape(tx.text)
     cat = tx.category or "Unknown"
 
-    amount = 0
-    try:
-        import re
-        amt_match = re.search(r"\d+", t_text)
-        if amt_match:
-            amount = int(amt_match.group())
-    except:
-        pass
+    import re
+    amt_match = re.search(r"\d+", t_text)
+    amount = int(amt_match.group()) if amt_match else 0
 
-    # Build compact history
     history_lines = []
-    for h in history[-12:]:
-        ts = time.strftime("%Y-%m-%d %H:%M", time.localtime(h.timestamp / 1000))
-        amt = ""
-        try:
-            import re
-            amt = re.search(r"\d+", h.text)
-            amt = amt.group() if amt else "?"
-        except:
-            amt = "?"
+    for h in history[-3:]:
+        match = re.search(r"\d+", h.text)
+        amt = match.group() if match else "?"
+        history_lines.append(f"- ₹{amt} | {html.escape(h.text)}")
 
-        history_lines.append(
-            f"- {ts} | ₹{amt} | {html.escape(h.text)} | {h.category}"
-        )
-
-    history_block = "\n".join(history_lines) if history_lines else "No relevant historical spending found."
+    history_block = "\n".join(history_lines) if history_lines else "None"
 
     return f"""
-        You are a personal finance assistant that generates *short, smart, actionable insights*.
+        You are a financial assistant.
+        Your job is to generate ONE clean insight about this spending.
 
-        User transaction:
+        RULES:
+        - Only 1–2 sentences.
+        - No conversations.
+        - Do NOT output 'Human:' or 'User:'.
+        - Do NOT continue the dialogue.
+        - Do NOT ask questions.
+        - ONLY output the final insight text.
+        - Be friendly and concise.
+
+        Transaction:
         Text: "{t_text}"
         Category: {cat}
         Amount: ₹{amount}
 
-        Recent spending history:
+        Recent history:
         {history_block}
 
-        Your task:
-        1. Identify what this transaction means.
-        2. Detect patterns from recent spending.
-        3. If spending is high/low compared to history, mention it.
-        4. Give 1 short actionable suggestion.
-        5. Keep it polite, helpful, and **under 3 sentences**.
-        6. NEVER hallucinate merchants or amounts.
-
-        Write the insight in friendly tone.
+        Write the final insight now:
         """
-
+# -------------------------------
+# Helper: safer cache key
+# -------------------------------
+def make_cache_key(text: str, ts: int) -> str:
+    base = f"{text}-{ts}"
+    # short hash suffix to avoid accidental collisions, keep human readable
+    h = hashlib.sha1(base.encode("utf-8")).hexdigest()[:8]
+    return f"{base}-{h}"
 
 # -------------------------------
 # API Endpoint
 # -------------------------------
 @router.post("/transaction-insight")
 def transaction_insight(req: InsightRequest):
-    key = f"{req.transaction.text}-{req.transaction.timestamp}"
+    key = make_cache_key(req.transaction.text, req.transaction.timestamp)
 
     if key in INSIGHT_CACHE:
         return {"insight": INSIGHT_CACHE[key]}
 
     try:
         tx = req.transaction
-        history = req.recent_history[-12:]  # limit to 12
+        history = req.recent_history[-3:]  # limit to 12
 
         prompt = build_prompt(tx, history)
-        out = run_local_llm(prompt)
-        INSIGHT_CACHE[key] = out.strip()
+        logging.info("INSIGHT PROMPT: %s", prompt[:1000])  # log first chunk
 
-        return {"insight": out.strip()}
+        # call local LLM
+        out = run_local_llm(prompt)
+
+        # debug: log raw output (trimmed)
+        logging.info("RAW LLM OUTPUT (trimmed 2000 chars): %s", str(out)[:2000])
+
+        clean = (out or "").strip()
+
+        INSIGHT_CACHE[key] = clean
+        return {"insight": clean}
 
     except Exception as e:
         logging.exception("INSIGHT FAILURE")
+        # return 500 so client can detect and show friendly message
         raise HTTPException(status_code=500, detail="Insight generation failed")
+
 # --------------------------------------------
 # NEW: Batch Insight Endpoint
 # --------------------------------------------
-
 class BatchRequest(BaseModel):
     transactions: List[InsightTxn]
     recent_history: List[InsightTxn] = []
 
-
 @router.post("/transaction-insight-batch")
 def transaction_insight_batch(req: BatchRequest):
     results = {}
-
     try:
         for tx in req.transactions:
-            key = f"{tx.text}-{tx.timestamp}"
+            key = make_cache_key(tx.text, tx.timestamp)
 
             # Already cached → skip LLM
             if key in INSIGHT_CACHE:
@@ -132,8 +136,10 @@ def transaction_insight_batch(req: BatchRequest):
 
             # Build and run
             prompt = build_prompt(tx, req.recent_history or [])
+            logging.info("BATCH PROMPT for %s: %s", key, prompt[:400])
+
             out = run_local_llm(prompt)
-            clean = out.strip()
+            clean = (out or "").strip()
 
             # Save
             INSIGHT_CACHE[key] = clean

@@ -1,5 +1,5 @@
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { useHistoryStore } from "../state/HistoryStore";
 
 function InsightShimmer() {
@@ -11,6 +11,13 @@ function InsightShimmer() {
     </div>
   );
 }
+
+/**
+ * HistoryPanel
+ * - Fetches AI insight for the passed `data` transaction.
+ * - Aborts request on close/data change.
+ * - Handles non-JSON and non-200 responses gracefully.
+ */
 export default function HistoryPanel({ data, onClose }) {
   const history = useHistoryStore((s) => s.history);
 
@@ -18,26 +25,33 @@ export default function HistoryPanel({ data, onClose }) {
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [insightError, setInsightError] = useState(null);
 
-  // Freeze background scroll
+  // keep a ref for AbortController so we can cancel fetches
+  const abortRef = useRef(null);
+
+  // Freeze background scroll while panel open
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => (document.body.style.overflow = "auto");
+  }, []);
+
+  // cleanup on unmount / close: abort outstanding requests
+  useEffect(() => {
+    return () => {
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, []);
 
   if (!data) return null;
 
   const amount = data.text.match(/\d+/)?.[0] || 0;
 
-  // --------------------------
-  // Build recent history (same category)
-  // --------------------------
   const buildRecentHistory = () => {
     const sameCat = history.filter(
       (h) =>
         (h.category || "").toLowerCase() === (data.category || "").toLowerCase()
     );
 
-    return sameCat.slice(0, 12).map((h) => ({
+    return sameCat.slice(0, 3).map((h) => ({
       text: h.text,
       timestamp: h.timestamp,
       merchant: h.merchant,
@@ -47,50 +61,130 @@ export default function HistoryPanel({ data, onClose }) {
     }));
   };
 
-  // --------------------------
-  // Fetch AI Insight
-  // --------------------------
+  // Helper: create a stable cache key
+  const cacheKey = `insight_${data.timestamp}_${(data.category || "unknown")
+    .toString()
+    .replace(/\s+/g, "_")
+    .toLowerCase()}`;
+
+  // Main effect: fetch insight when data changes
   useEffect(() => {
+    let isMounted = true;
     setInsight(null);
     setInsightError(null);
     setLoadingInsight(true);
 
-    const cacheKey = `insight_${data.timestamp}`;
+    // return cached instantly if available
     const cached = sessionStorage.getItem(cacheKey);
-
     if (cached) {
       setInsight(cached);
       setLoadingInsight(false);
       return;
     }
 
-    fetch("http://127.0.0.1:8000/transaction-insight", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        transaction: {
-          text: data.text,
-          timestamp: data.timestamp,
-          merchant: data.merchant,
-          category: data.category,
-          confidence: data.confidence,
-          engine: data.engine,
-        },
-        recent_history: buildRecentHistory(),
-      }),
-    })
-      .then((res) => res.json())
-      .then((json) => {
-        if (!json.insight) throw new Error("No insight returned");
-        setInsight(json.insight);
-        sessionStorage.setItem(cacheKey, json.insight);
-      })
-      .catch((err) => {
-        console.error("Insight error:", err);
-        setInsightError("Could not generate insight.");
-      })
-      .finally(() => setLoadingInsight(false));
-  }, [data.timestamp]);
+    // Abort controller + timeout
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeoutMs = 30000; // 30s
+
+    const timeoutId = setTimeout(() => {
+      if (abortRef.current) {
+        abortRef.current.abort();
+      }
+    }, timeoutMs);
+
+    (async () => {
+      try {
+        const payload = {
+          transaction: {
+            text: data.text,
+            timestamp: data.timestamp,
+            merchant: data.merchant,
+            category: data.category,
+            confidence: data.confidence,
+            engine: data.engine,
+          },
+          recent_history: buildRecentHistory(),
+        };
+
+        // If your frontend port is 5173 and backend 8000, request must go to backend port.
+        // Use full origin (http://127.0.0.1:8000/transaction-insight). If you proxy dev server, adjust accordingly.
+        const res = await fetch("http://127.0.0.1:8000/transaction-insight", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+
+        // If aborted, throw to be caught below
+        if (controller.signal.aborted) throw new Error("Request aborted");
+
+        // Non-OK responses
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          const msg = `Server returned ${res.status}${txt ? `: ${txt}` : ""}`;
+          throw new Error(msg);
+        }
+
+        // Try JSON parse, fallback to plain text
+        let json;
+        try {
+          json = await res.json();
+        } catch (e) {
+          // res had non-JSON body — attempt to read as text and use it
+          const txt = await res.text().catch(() => "");
+          if (txt && txt.trim().length) {
+            // set as insight directly
+            if (isMounted) {
+              setInsight(txt.trim());
+              sessionStorage.setItem(cacheKey, txt.trim());
+            }
+            return;
+          }
+          throw new Error("Server returned invalid JSON");
+        }
+
+        // Expecting { insight: "..." }
+        if (!json || typeof json !== "object" || !("insight" in json)) {
+          throw new Error("Unexpected server response format");
+        }
+
+        const got = (json.insight || "").toString().trim();
+        if (!got) {
+          throw new Error("Empty insight returned");
+        }
+
+        if (isMounted) {
+          setInsight(got);
+          sessionStorage.setItem(cacheKey, got);
+        }
+      } catch (err) {
+        // Distinguish abort vs other errors
+        if (err.name === "AbortError") {
+          console.warn("Insight fetch aborted");
+          // keep loading false
+          if (isMounted) setInsightError("Insight request aborted.");
+        } else {
+          console.error("Insight fetch error:", err);
+          if (isMounted)
+            setInsightError(
+              typeof err === "string" ? err : err.message || "Failed to fetch insight"
+            );
+        }
+      } finally {
+        clearTimeout(timeoutId);
+        abortRef.current = null;
+        if (isMounted) setLoadingInsight(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      if (abortRef.current) abortRef.current.abort();
+      clearTimeout(timeoutId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.timestamp]); // only re-run when transaction changes
 
   return (
     <motion.div
@@ -113,7 +207,11 @@ export default function HistoryPanel({ data, onClose }) {
     >
       {/* CLOSE BUTTON */}
       <button
-        onClick={onClose}
+        onClick={() => {
+          // abort any outstanding fetch
+          if (abortRef.current) abortRef.current.abort();
+          onClose();
+        }}
         className="absolute top-4 right-4 text-white/80 hover:text-white text-xl"
       >
         ✕
@@ -158,11 +256,17 @@ export default function HistoryPanel({ data, onClose }) {
           {loadingInsight ? (
             <InsightShimmer />
           ) : insightError ? (
-            <p className="text-red-400">{insightError}</p>
+            <div>
+              <p className="text-red-400">{insightError}</p>
+              <p className="mt-2 text-xs text-neutral-400">
+                Check backend logs and network. Open devtools → Network to inspect the
+                POST /transaction-insight request.
+              </p>
+            </div>
+          ) : insight ? (
+            <p className="text-neutral-300 leading-relaxed whitespace-pre-wrap">{insight}</p>
           ) : (
-            <p className="text-neutral-300 leading-relaxed whitespace-pre-wrap">
-              {insight}
-            </p>
+            <p className="text-neutral-400">No insight available.</p>
           )}
         </div>
 

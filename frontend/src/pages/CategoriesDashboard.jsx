@@ -13,6 +13,20 @@ const { tap } = useHaptics();
   className="active:scale-[0.97] transition-all"
 ></div>
 // SAME COLOR MAP
+const normalizeCategory = (cat = "") => {
+  const c = cat.toLowerCase().trim();
+
+  if (["food", "food & dining", "dining"].includes(c)) return "Food & Dining";
+  if (["grocery", "groceries"].includes(c)) return "Groceries";
+  if (["travel"].includes(c)) return "Travel";
+  if (["fuel", "petrol"].includes(c)) return "Fuel";
+  if (["bills", "utilities"].includes(c)) return "Bills";
+  if (["shopping"].includes(c)) return "Shopping";
+  if (["education"].includes(c)) return "Education";
+  if (["health", "medical"].includes(c)) return "Health";
+
+  return "Others";
+};
 const CATEGORY_COLORS = {
   "Food & Dining": "#FF6F6F",
   Groceries: "#4ADE80",
@@ -63,9 +77,9 @@ export default function CategoriesDashboard() {
   const categoryTotals = useMemo(() => {
     const map = {};
     history.forEach((h) => {
-      const cat = h.category || "Others";
-      const amount = parseFloat(h.text.match(/\d+/)?.[0] || 0);
-      map[cat] = (map[cat] || 0) + amount;
+    const cat = normalizeCategory(h.category || "Others");
+    const amount = parseFloat(h.text.match(/\d+/)?.[0] || 0);
+    map[cat] = (map[cat] || 0) + amount;
     });
     return map;
   }, [history]);
@@ -73,8 +87,8 @@ export default function CategoriesDashboard() {
   const pieData = Object.keys(categoryTotals).map((cat) => ({
     name: cat,
     value: categoryTotals[cat],
-    fill: CATEGORY_COLORS[cat] || CATEGORY_COLORS.Others,
-  }));
+    fill: CATEGORY_COLORS[normalizeCategory(cat)],
+}));
 
   const totalSpend = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
 
@@ -82,8 +96,9 @@ export default function CategoriesDashboard() {
   //  CLICK → OPEN PANEL
   // -------------------------
   function openCategoryPanel(cat) {
-    const transactions = history.filter((h) => h.category === cat);
-
+    const transactions = history.filter(
+      (h) => normalizeCategory(h.category) === normalizeCategory(cat)
+    );
     const amounts = transactions.map((t) =>
       parseFloat(t.text.match(/\d+/)?.[0] || 0)
     );
