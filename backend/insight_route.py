@@ -4,9 +4,9 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
-
-router = APIRouter()
 INSIGHT_CACHE = {}
+router = APIRouter()
+
 # -------------------------------
 # Input Models
 # -------------------------------
@@ -84,6 +84,7 @@ def build_prompt(tx: InsightTxn, history: List[InsightTxn]) -> str:
         Write the insight in friendly tone.
         """
 
+
 # -------------------------------
 # API Endpoint
 # -------------------------------
@@ -91,7 +92,6 @@ def build_prompt(tx: InsightTxn, history: List[InsightTxn]) -> str:
 def transaction_insight(req: InsightRequest):
     key = f"{req.transaction.text}-{req.transaction.timestamp}"
 
-    # If cached → return instantly
     if key in INSIGHT_CACHE:
         return {"insight": INSIGHT_CACHE[key]}
 
@@ -101,11 +101,46 @@ def transaction_insight(req: InsightRequest):
 
         prompt = build_prompt(tx, history)
         out = run_local_llm(prompt)
-
-        INSIGHT_CACHE[key] = out.strip()   # Save for next time
+        INSIGHT_CACHE[key] = out.strip()
 
         return {"insight": out.strip()}
 
     except Exception as e:
         logging.exception("INSIGHT FAILURE")
         raise HTTPException(status_code=500, detail="Insight generation failed")
+# --------------------------------------------
+# NEW: Batch Insight Endpoint
+# --------------------------------------------
+
+class BatchRequest(BaseModel):
+    transactions: List[InsightTxn]
+    recent_history: List[InsightTxn] = []
+
+
+@router.post("/transaction-insight-batch")
+def transaction_insight_batch(req: BatchRequest):
+    results = {}
+
+    try:
+        for tx in req.transactions:
+            key = f"{tx.text}-{tx.timestamp}"
+
+            # Already cached → skip LLM
+            if key in INSIGHT_CACHE:
+                results[key] = INSIGHT_CACHE[key]
+                continue
+
+            # Build and run
+            prompt = build_prompt(tx, req.recent_history or [])
+            out = run_local_llm(prompt)
+            clean = out.strip()
+
+            # Save
+            INSIGHT_CACHE[key] = clean
+            results[key] = clean
+
+        return {"insights": results}
+
+    except Exception:
+        logging.exception("BATCH INSIGHT FAILURE")
+        raise HTTPException(status_code=500, detail="Batch insight generation failed")

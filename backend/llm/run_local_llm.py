@@ -1,9 +1,7 @@
 from llama_cpp import Llama
 
-# Path to your GGUF shard
 LLM_PATH = "models/qwen2.5-7b-instruct-q4_k_m-00001-of-00002.gguf"
 
-# Load model once
 llm = Llama(
     model_path=LLM_PATH,
     n_ctx=2048,
@@ -14,21 +12,20 @@ llm = Llama(
 
 def run_local_llm(prompt: str) -> str:
     try:
-        response = llm(
+        out = llm(
             prompt=prompt,
             max_tokens=200,
             temperature=0.4,
             top_p=0.9,
             stop=["User:", "Human:", "</s>"]
         )
-        print("RAW LLM OUTPUT:", response)
-        # 👉 EXTRACT CLEAN TEXT (THIS is what you were missing)
-        text = response["choices"][0]["text"].strip()
 
-        # Cleanup repeated roles if model echoes them
-        for bad in ["Assistant:", "User:", "Human:"]:
-            if bad in text:
-                text = text.split(bad)[0].strip()
+        # RAW RESPONSE IS ALWAYS A DICT → USE choices[0].text
+        text = out["choices"][0]["text"].strip()
+
+        # Remove "Assistant:" if model echos
+        if text.lower().startswith("assistant:"):
+            text = text[len("Assistant:"):].strip()
 
         return text
 

@@ -11,7 +11,6 @@ function InsightShimmer() {
     </div>
   );
 }
-
 export default function HistoryPanel({ data, onClose }) {
   const history = useHistoryStore((s) => s.history);
 
@@ -153,18 +152,18 @@ export default function HistoryPanel({ data, onClose }) {
         <div className="w-full h-[1px] bg-white/10 my-6"></div>
 
         {/* AI INSIGHT BOX */}
-       <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-        <h3 className="font-semibold mb-2">AI Insight</h3>
+        <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+          <h3 className="font-semibold mb-2">AI Insight</h3>
 
-        {loadingInsight ? (
+          {loadingInsight ? (
             <InsightShimmer />
-        ) : insightError ? (
+          ) : insightError ? (
             <p className="text-red-400">{insightError}</p>
-        ) : (
+          ) : (
             <p className="text-neutral-300 leading-relaxed whitespace-pre-wrap">
-            {insight}
+              {insight}
             </p>
-        )}
+          )}
         </div>
 
         {/* RAW TEXT */}
