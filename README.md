@@ -1,20 +1,26 @@
 # 🚀 Hybrid GenAI Transaction Categorization
 
-[![Build Status](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions/workflows/ci.yml/badge.svg)](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions)
-![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)
-![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB)
-![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)
+[![Build Status](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions/workflows/ci.yml/badge.svg)](https://github.com/Atishay9828/Hybrid-GenAI-Transaction-Categorization/actions)  
+![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)  
+![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB)  
+![Backend](https://img.shields.io/badge/Backend-FastAPI-009688)  
 ![AI Pipeline](https://img.shields.io/badge/AI-Hybrid%20ONNX%20%2B%20LLM-purple)
 
-A modern AI-powered transaction categorization system blending **ONNX**, **LLM fallback**, and a **self-learning Merchant Memory module**.
+A modern AI-powered transaction categorization system blending **ONNX**, **LLM fallback**, and a **self-learning Merchant Memory engine**.
 
 Built by **Atishay Jain**.
 
 ---
 
-## 🔥 Overview
+# 🎥 Demo Video
+📌 **YouTube Walkthrough:** https://youtu.be/fsTXVh9JpoE  
+*(Explains architecture, demo, LLM fallback, merchant memory, and UI.)*
 
-This project reads natural-language transaction text like:
+---
+
+# 🔥 Overview
+
+This system reads natural language transaction text like:
 
 ```
 dominos order 750 
