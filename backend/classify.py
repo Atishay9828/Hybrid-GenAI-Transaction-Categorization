@@ -135,13 +135,16 @@ def get_token_attributions(text):
 # MAIN CLASSIFIER
 # --------------------------------------------
 
-def classify_transaction(text: str):
+def classify_transaction(text: str, force_llm: bool = False):
     clean = preprocess(text)
 
     # -------------------------------
     # 1) Merchant Override (strongest)
     # -------------------------------
-    merchant, merchant_cat = detect_merchant(clean)
+    merchant = None
+    merchant_cat = None
+    if not force_llm:
+        merchant, merchant_cat = detect_merchant(clean)
 
     if merchant_cat is not None:
         return {
@@ -175,6 +178,7 @@ def classify_transaction(text: str):
 
     pred_id = int(np.argmax(probs))
     confidence = float(probs[pred_id])
+    print(f"ONNX Confidence: {confidence:.4f}")
     category_id = ID2CAT[pred_id]
     category_label = ID2NAME[pred_id]
     attribution = get_token_attributions(clean)
@@ -194,11 +198,17 @@ def classify_transaction(text: str):
     if any_in(HEALTH_WORDS) and category_id != "health": force_fallback = True
     if any_in(ENT_WORDS) and category_id != "entertainment": force_fallback = True
     if any_in(EDU_WORDS) and category_id != "education": force_fallback = True
+    
+    if force_llm:
+        force_fallback = True
+
+    if force_llm:
+        force_fallback = True
 
     # -------------------------------
     # 4) AUTO-LEARNING OF MERCHANTS
     # -------------------------------
-    if merchant is None:
+    if merchant is None and not force_llm:
         if confidence >= 0.98:
             candidate = clean.split()[0]
             add_merchant(candidate, category_id)
@@ -245,3 +255,4 @@ if __name__ == "__main__":
     print(classify_transaction("PAYTM ZOMATO ORDER 199"))
     print(classify_transaction("UBER TRIP 234"))
     print(classify_transaction("AIRTEL BILL PAYMENT"))
+    print(classify_transaction("GENERIC STORE PURCHASE"))

@@ -21,6 +21,7 @@ app.add_middleware(
 
 class PredictInput(BaseModel):
     text: str
+    force_llm: bool = False
 
 
 class FeedbackInput(BaseModel):
@@ -37,7 +38,7 @@ def health():
 def predict(payload: PredictInput):
     if not payload.text or not payload.text.strip():
         raise HTTPException(status_code=400, detail="Empty text")
-    out = classify_transaction(payload.text)
+    out = classify_transaction(payload.text, force_llm=payload.force_llm)
     return out
 
 

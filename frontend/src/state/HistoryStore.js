@@ -37,10 +37,9 @@ export const useHistoryStore = create((set, get) => {
         const withTs = { ...item, timestamp: item.timestamp || Date.now() };
         const newHist = [withTs, ...state.history];
 
-        // trim to last 25
-        const trimmed = newHist.slice(0, 25);
-        saveToStorage(trimmed);
-        return { history: trimmed };
+        // NO TRIMMING - save all history
+        saveToStorage(newHist);
+        return { history: newHist };
       });
     },
 

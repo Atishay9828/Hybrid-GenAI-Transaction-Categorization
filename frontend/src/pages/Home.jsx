@@ -17,17 +17,20 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handlePredict = async () => {
+  const handlePredict = async (forceLLM = false) => {
     if (!text.trim()) return;
 
     setLoading(true);
-    setResult(null);
+    if (typeof forceLLM !== "boolean" || !forceLLM) setResult(null);
 
     try {
       const res = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          text,
+          force_llm: typeof forceLLM === "boolean" ? forceLLM : false
+        }),
       });
 
       const data = await res.json();
@@ -83,13 +86,23 @@ export default function Home() {
         {loading && <LoadingSpinner />}
 
         {result && (
-          <PredictionCard
-            category={result.category}
-            confidence={result.confidence}
-            explanation={result.explanation}
-            engine={result.used}
-            token_attributions={result.token_attributions}
-          />
+          <div className="flex flex-col items-center gap-2 w-full">
+            <PredictionCard
+              category={result.category}
+              confidence={result.confidence}
+              explanation={result.explanation}
+              engine={result.used}
+              token_attributions={result.token_attributions}
+            />
+            {result.used !== "llm_fallback" && (
+              <button
+                onClick={() => handlePredict(true)}
+                className="text-xs text-neutral-500 hover:text-neutral-300 underline transition-colors"
+              >
+                Wrong? Retry with LLM
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>
